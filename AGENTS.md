@@ -4,7 +4,7 @@
 
 Este repositorio reconstruirá el sitio corporativo público `gbitcorp.com`, cuyo CMS actual es ProcessWire, como un proyecto Django + Wagtail con PostgreSQL. Prioridades: conservar identidad, contenidos públicos y URLs verificables; ofrecer edición en Wagtail; mejorar responsive, accesibilidad, seguridad y mantenibilidad.
 
-El trabajo se ejecuta por fases. La Fase 0 (auditoría) está cerrada y FASE 1.1 (esqueleto Django/Wagtail) está autorizada. No crear todavía modelos editoriales, importadores, contenido migrado ni frontend público; esperar autorización para FASE 1.2.
+El trabajo se ejecuta por fases. La Fase 0 (auditoría), FASE 1.1 (base técnica), FASE 1.2B (modelos) y FASE 1.2C (validación editorial/administrativa) están cerradas. Los modelos editoriales permanecen vacíos; no crear/importar páginas, categorías, assets ni contenido ProcessWire, y no construir frontend público hasta autorización de las fases correspondientes.
 
 ## Alcance y fuentes
 
@@ -36,6 +36,7 @@ El trabajo se ejecuta por fases. La Fase 0 (auditoría) está cerrada y FASE 1.1
 - No arrancar ni ejecutar el sitio ProcessWire, PHP antiguo, módulos o scripts del respaldo.
 - No enviar formularios reales ni ejecutar acciones que creen registros, mensajes o postulaciones.
 - Formularios e integraciones externas requieren confirmar destino y comportamiento; las credenciales nuevas deben manejarse fuera del código y del Git.
+- Para probar administración Wagtail, crear usuarios exclusivamente en la base temporal del test runner de Django. Nunca crear superusuarios permanentes en la base de desarrollo sin autorización explícita.
 
 ## Seguridad al consultar proyectos de referencia
 
@@ -86,7 +87,12 @@ El trabajo se ejecuta por fases. La Fase 0 (auditoría) está cerrada y FASE 1.1
 - PostgreSQL es un servicio administrado por el usuario. Codex no debe iniciarlo, detenerlo, reiniciarlo, deshabilitarlo, reinstalarlo ni modificar servicio, configuración o datos del servidor. Solo conectar a la instancia local indicada por `.env`. Si la base de `DATABASE_URL` no existe, se permite crear únicamente esa base con el usuario existente, autocommit e identificador escapado con psycopg; no crear roles ni cambiar privilegios. Si ya existe, inspeccionar objetos antes de migrar y detenerse si hay tablas/datos previos no atribuibles al proyecto. Aplicar migraciones solo a la base confirmada.
 - El desarrollo actual es nativo en Windows; la contenerización se planifica posteriormente para Arch Linux y producción.
 - Ejecutar `manage.py runserver` solo enlazado a `127.0.0.1`; no exponer el servidor de desarrollo a la red.
-- En FASE 1.1 solo están autorizados los modelos base y migraciones estándar de Django/Wagtail sobre la base de desarrollo aprobada. No importar ProcessWire ni crear modelos editoriales hasta FASE 1.2 autorizada.
+- Modelos editoriales vigentes: app `editorial`; contrato en `docs/27_` y `docs/28_`, implementación en `editorial/models.py` y bloques en `editorial/blocks.py`. La app define estructura vacía solamente. La preservación pública y manifiesto de 49 rutas fijan alcance; las 762 páginas históricas y 728 assets de ProcessWire no son importables en bloque.
+- La base PostgreSQL de desarrollo contiene el esquema editorial de FASE 1.2B; solo aplicar migraciones autorizadas a `gbitcorp_wagtail_dev`. No administrar el servicio PostgreSQL ni cambiar usuarios/privilegios. No ejecutar migraciones hacia otras bases.
+- `RouteContainerPage` son ancestros técnicos, no contenido: deben permanecer fuera de menús, búsqueda y sitemap, devolver 404 directamente y solo existir para resolver rutas hijas verificadas. No crear sus instancias automáticamente sin autorización de la fase de carga de estructura/contenido.
+- No crear/importar las 49 páginas ni sus dependencias, categorías o medios hasta autorización explícita. Todas siguen `import_authorized=No`; modelos vacíos no constituyen aprobación editorial.
+- No renderizar HTML heredado de ProcessWire como seguro. Artículos usan StreamField tipado con RichText acotado; contenido fuente no representable requiere staging inerte, allowlist/sanitización y revisión. EULA permanece vacío hasta aprobación legal/editorial.
+- Formularios Zoho son integración funcional fuera de los modelos editoriales; no copiar configuraciones heredadas, credenciales ni enviar solicitudes.
 
 ## Validación y documentación
 

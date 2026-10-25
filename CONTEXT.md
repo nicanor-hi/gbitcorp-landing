@@ -6,7 +6,7 @@ Migrar el sitio corporativo público `https://gbitcorp.com` de ProcessWire a Dja
 
 ## Estado de fase
 
-Fases 0 a 0.6.1 (auditoría y preservación) completadas y publicadas en `102a0bf`. FASE 1.1 completada: estructura Django/Wagtail, dependencias bloqueadas, configuración por `.env`, base PostgreSQL de desarrollo y migraciones estándar verificadas. No hay modelos editoriales, importador ni frontend público. FASE 1.2 requiere autorización explícita.
+Fases 0 a 0.6.1 (auditoría y preservación) completadas y publicadas en `102a0bf`. FASE 1.1 completada: estructura Django/Wagtail, dependencias bloqueadas, configuración por `.env`, base PostgreSQL de desarrollo y migraciones estándar verificadas. FASE 1.2B completada: modelos editoriales vacíos, StreamFields, snippet de categorías y migración de esquema aplicados. FASE 1.2C completada: 16 pruebas pasan, las 49 rutas del manifiesto resuelven en fixtures temporales y la administración fue validada con usuario efímero de test. No se crearon páginas, categorías, assets ni contenido migrado en la base permanente; las 49 rutas siguen con `import_authorized=No`. No hay frontend público. Ver `docs/30_VALIDACION_EDITORIAL_WAGTAIL.md`.
 
 ## Hechos observados
 
@@ -47,6 +47,23 @@ Fases 0 a 0.6.1 (auditoría y preservación) completadas y publicadas en `102a0b
 - `manage.py check`, `migrate --check`, `uv sync --locked` y dos pruebas sin DB pasaron. `/admin/login/` y el CSS estático Wagtail devolvieron HTTP 200 desde el servidor de desarrollo enlazado a `127.0.0.1`; no se creó superusuario. El proceso de desarrollo se cerró tras las pruebas.
 - Windows es el entorno nativo de desarrollo. No se utilizó Docker; la contenerización se reserva para fases posteriores en Arch Linux y producción. No se usó MySQL histórico ni RDS. La base ProcessWire permanece fuera de esta fase.
 
+## FASE 1.2B — Modelos editoriales Wagtail
+
+- App `editorial` con `HomePage`, `BlogIndexPage`, `BlogPostPage`, `ServicePage`, `EulaPage`, `RouteContainerPage`, `BlogCategory` snippet y `SiteFooterSettings`.
+- Siete rutas estructurales están expresadas por validaciones del tipo `RouteContainerPage`; no se crearon instancias. Sus rutas directas responden 404, no aparecen en menú/sitemap y el tipo no ofrece creación desde el editor.
+- Home tiene StreamField tipado para las secciones auditadas y copy de hero; BlogPost usa StreamField con solo un bloque RichText limitado, categorías M2M; ServicePage usa bloques ordenados de ofertas e imágenes de herramientas; EULA utiliza RichTextField con allowlist. Ajustes compartidos de footer/social son settings por sitio.
+- Migración `editorial.0001_initial` aplicada a `gbitcorp_wagtail_dev` tras confirmar que solo existía el esquema base; crea tablas editoriales sin contenido. El servicio PostgreSQL lo administra el usuario y no fue alterado.
+- 11 pruebas editoriales verifican ausencia de seeds, jerarquías, slugs/categorías, StreamField, resolución de las 49 rutas del manifiesto en árbol de prueba y 404 de los siete ancestros. Véase `docs/29_IMPLEMENTACION_MODELOS_WAGTAIL.md`.
+- La implementación de modelos no autoriza importar ni publicar contenido. Aprobación editorial de páginas/categorías/media y aprobación legal de EULA siguen pendientes. Zoho/frontend quedan fuera de esta fase.
+
+## FASE 1.2C — Validación editorial y administrativa
+
+- 16 pruebas automatizadas pasan. El test runner usa su base temporal para árbol de 56 nodos (49 rutas públicas y siete ancestros), usuario de administración temporal, relaciones y medios temporales; no se pobló la base de desarrollo.
+- La administración de páginas, snippet y settings se verificó con cliente Django: anónimo redirige a autenticación y sesión efímera autorizada obtiene 200. La validación de rutas es resolución Wagtail, no renderizado del frontend.
+- `manage.py check`, `makemigrations --check --dry-run`, `migrate --check` y `git diff --check` pasan. Settings de producción se importaron con variables ficticias, sin conexión a producción. No se generaron migraciones nuevas.
+- RichText limitado no constituye sanitización del HTML legado. El futuro importador requiere allowlist y revisión; no usar `StreamField.to_python` como validador de bloques desconocidos, pues el comportamiento del framework puede omitir tipos desconocidos.
+- Detalle: `docs/30_VALIDACION_EDITORIAL_WAGTAIL.md`. FASE 1.2C no autoriza importar contenido ni construir frontend.
+
 ## Arquitectura objetivo (propuesta, no implementada)
 
 - Django con PostgreSQL y Wagtail para edición.
@@ -66,4 +83,5 @@ Fases 0 a 0.6.1 (auditoría y preservación) completadas y publicadas en `102a0b
 - Ver la auditoría inicial en `docs/01_AUDITORIA_PROCESSWIRE.md` a `docs/06_PLAN_MIGRACION.md`, preservación en `docs/07_PRESERVACION_SITIO.md` a `docs/14_DIAGNOSTICO_HOME_RENDIMIENTO.md`, y auditoría/modelo/mapeo DB en `docs/15_AUDITORIA_MYSQL_PROCESSWIRE.md` a `docs/19_ESTRATEGIA_IMPORTACION.md`.
 - FASE 0.5–0.6.1 documenta codificación, manifiesto de 49 rutas, clasificación editorial, assets, preparación del importador y cierre en `docs/20_` a `docs/25_`; el CSV `docs/21_MANIFIESTO_CONTENIDO_VIGENTE.csv` sigue siendo una allowlist candidata, no aprobación de publicación.
 - La implementación Django/Wagtail de FASE 1.1 se limita a configuración técnica base y migraciones estándar. El usuario administra el servicio PostgreSQL; Codex no lo controla. La base autorizada para desarrollo es `gbitcorp_wagtail_dev`; no se creó usuario ni se cambiaron privilegios. No se crea superusuario sin autorización expresa.
+- FASE 1.2B incorpora únicamente esquema editorial vacío según `docs/27_CONTRATO_EDITORIAL_WAGTAIL.md` y `docs/28_RESOLUCION_DECISIONES_EDITORIALES.md`. El manifiesto es allowlist candidata, no autorización; no sembrar las 49 páginas, los siete ancestros, cinco categorías ni medios automáticamente. Consultar el informe `docs/29_IMPLEMENTACION_MODELOS_WAGTAIL.md`.
 - El respaldo ProcessWire y el documento fuente Playwright permanecen locales e ignorados. Las referencias de assets apuntan a las rutas del respaldo; no se copiaron assets binarios a `docs/reference/`, por lo que estas referencias no son autosuficientes si se pierde el respaldo local. No se modificó el original.
