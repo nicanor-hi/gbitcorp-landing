@@ -24,7 +24,11 @@ La selección prioriza las ramas LTS compatibles con Python 3.13. Django 5.2 sop
 manage.py
 config/
   __init__.py
-  settings.py
+  settings/
+    __init__.py
+    base.py
+    local.py
+    production.py
   urls.py
   asgi.py
   wsgi.py
@@ -70,7 +74,27 @@ Para generar localmente un secreto de desarrollo puede usarse:
 uv run python -c "import secrets; print(secrets.token_urlsafe(64))"
 ```
 
-Variables utilizadas: `SECRET_KEY`, `DEBUG`, `ALLOWED_HOSTS`, `DATABASE_URL`, `TIME_ZONE`, `WAGTAILADMIN_BASE_URL`. `DATABASE_URL` es la única fuente de configuración PostgreSQL; si está vacía, Django falla explícitamente. No se admiten variables individuales `DB_*`. `.env.example` no contiene secretos efectivos. No activar `DEBUG` ni usar `runserver` en producción.
+## Settings por entorno
+
+La configuración se separa en `config.settings.base` (común), `config.settings.local` (Windows/desarrollo) y `config.settings.production`.
+
+- `manage.py` usa `config.settings.local` por defecto para facilitar el desarrollo. `local.py` carga `.env`, fija `DEBUG=True`, limita hosts a loopback y deja disponibles los recursos estáticos/media de desarrollo.
+- WSGI y ASGI no eligen settings por omisión: el proceso debe definir `DJANGO_SETTINGS_MODULE`. En despliegue, seleccionar explícitamente `config.settings.production`.
+- Producción fija `DEBUG=False`, exige `ALLOWED_HOSTS`, activa redirección HTTPS, cookies seguras y cabeceras de proxy (`X-Forwarded-Proto` / `X-Forwarded-Host`). El proxy de confianza debe sobrescribirlas; no usar estas settings con un proxy que permita falsificarlas. HSTS comienza con una hora, sin incluir subdominios ni preload; elevarlo solo tras validar HTTPS en el dominio productivo.
+- `manage.py check --deploy` advierte que HSTS no incluye subdominios ni está en preload. Es deliberado hasta confirmar que todos los subdominios usan HTTPS y que el dominio debe entrar en la lista preload; no se silencian esas advertencias.
+- `production.py` no carga `.env`. El entorno del despliegue debe proporcionar `SECRET_KEY`, `DATABASE_URL` y `ALLOWED_HOSTS`; configurar `CSRF_TRUSTED_ORIGINS` para los orígenes HTTPS que realmente envíen formularios. `DATABASE_URL` sigue siendo la única configuración PostgreSQL y no se aceptan variables individuales `DB_*`.
+- No se fijan rutas de Windows en producción. `STATIC_ROOT` y `MEDIA_ROOT` son rutas bajo `BASE_DIR` por defecto, con `MEDIA_ROOT` configurable mediante variable de entorno; el despliegue/container futuro definirá montajes y servidor de estáticos/media.
+
+Selección local explícita opcional en PowerShell:
+
+```powershell
+$env:DJANGO_SETTINGS_MODULE = "config.settings.local"
+uv run python manage.py check
+```
+
+En despliegue, establecer `DJANGO_SETTINGS_MODULE=config.settings.production` en el entorno del proceso WSGI/ASGI y proporcionar `SECRET_KEY`, `DATABASE_URL` y `ALLOWED_HOSTS` mediante el gestor de secretos/variables del entorno. Añadir `CSRF_TRUSTED_ORIGINS` solo con orígenes HTTPS confirmados. No se proveen valores de producción ni secretos de ejemplo.
+
+Para comandos de gestión productivos, seleccionar `config.settings.production` y cargar las variables mediante el gestor seguro del entorno; no copiar secretos a comandos, archivos versionados ni documentación. No activar `DEBUG` ni usar `runserver` en producción.
 
 El entorno usa `uv` desde `%USERPROFILE%\.local\bin\uv.exe`; si el comando `uv` no está en PATH, invocar esa ruta absoluta o añadir solo esa carpeta al PATH de la sesión PowerShell. No se modifica PATH global ni Python 3.10.
 

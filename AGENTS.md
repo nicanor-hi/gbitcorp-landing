@@ -37,6 +37,15 @@ El trabajo se ejecuta por fases. La Fase 0 (auditoría) está cerrada y FASE 1.1
 - No enviar formularios reales ni ejecutar acciones que creen registros, mensajes o postulaciones.
 - Formularios e integraciones externas requieren confirmar destino y comportamiento; las credenciales nuevas deben manejarse fuera del código y del Git.
 
+## Seguridad al consultar proyectos de referencia
+
+- Consultar únicamente los archivos necesarios para la tarea; limitar las inspecciones a la configuración o código pertinentes.
+- No realizar búsquedas recursivas indiscriminadas que puedan incluir archivos sensibles.
+- Excluir expresamente `.env`, `.env.*` con secretos reales, claves privadas, certificados, credenciales y archivos de configuración local sensibles.
+- No leer, imprimir, copiar ni registrar secretos de otros proyectos.
+- Si se encuentra información sensible accidentalmente, no reproducirla en el reporte ni incorporarla al repositorio.
+- Estas restricciones también aplican a herramientas de búsqueda, scripts y comandos ejecutados por agentes automatizados.
+
 ## Playwright
 
 - Usar exclusivamente la instalación global ya gestionada por Volta y sus rutas/versiones consignadas en el documento local. No instalar Playwright, Node.js, Volta ni navegadores sin una necesidad nueva y aprobación.
@@ -71,7 +80,9 @@ El trabajo se ejecuta por fases. La Fase 0 (auditoría) está cerrada y FASE 1.1
 - `.venv/` está excluido de Git. Antes de recrearlo, inspeccionar `pyvenv.cfg` y paquetes (`uv pip list --python .venv\Scripts\python.exe`) y preservar cualquier dependencia/dato ajeno al entorno. `uv venv --clear` solo se permite para la ruta exacta del `.venv` de este repositorio tras verificarla.
 - Para evitar problemas con la política de activación de PowerShell, usar `.\.venv\Scripts\python.exe` directamente y verificar ruta/versión con `.\.venv\Scripts\python.exe --version` y `.\.venv\Scripts\python.exe -c "import sys; print(sys.executable); print(sys.prefix != sys.base_prefix)"`.
 - Las dependencias de aplicación se declaran en `pyproject.toml` y se resuelven en `uv.lock`; usar `uv sync` y `uv run`, nunca instalaciones globales. La base técnica actual usa Django 5.2 LTS, Wagtail 7.4 LTS, psycopg 3 y Python 3.13.17; revisar compatibilidad oficial antes de actualizar.
-- Configuración local solo por variables de entorno o `.env` ignorado; `.env.example` no lleva secretos. `DATABASE_URL` es la única fuente de configuración de PostgreSQL; si falta o es inválida, Django debe fallar explícitamente. No usar variables individuales `DB_*`. No incluir credenciales en código, argumentos, documentación ni Git.
+- Settings separados en `config/settings/base.py`, `local.py` y `production.py`. `manage.py` puede usar local como predeterminado; WSGI/ASGI requieren `DJANGO_SETTINGS_MODULE` explícito. Producción debe seleccionar `config.settings.production` con `DEBUG=False` y `ALLOWED_HOSTS` explícitos. Configuración local carga `.env` ignorado; producción recibe variables desde el entorno del despliegue y no carga `.env` automáticamente.
+- `.env.example` no lleva secretos. `DATABASE_URL` es la única fuente de configuración PostgreSQL; si falta o es inválida, Django debe fallar explícitamente. No usar variables individuales `DB_*`. No incluir credenciales en código, argumentos, documentación ni Git.
+- La configuración de producción asume un reverse proxy de confianza que sobrescribe `X-Forwarded-Proto` y `X-Forwarded-Host`; validar esa configuración en el entorno real antes de desplegar. HTTPS seguro no se aplica en settings locales.
 - PostgreSQL es un servicio administrado por el usuario. Codex no debe iniciarlo, detenerlo, reiniciarlo, deshabilitarlo, reinstalarlo ni modificar servicio, configuración o datos del servidor. Solo conectar a la instancia local indicada por `.env`. Si la base de `DATABASE_URL` no existe, se permite crear únicamente esa base con el usuario existente, autocommit e identificador escapado con psycopg; no crear roles ni cambiar privilegios. Si ya existe, inspeccionar objetos antes de migrar y detenerse si hay tablas/datos previos no atribuibles al proyecto. Aplicar migraciones solo a la base confirmada.
 - El desarrollo actual es nativo en Windows; la contenerización se planifica posteriormente para Arch Linux y producción.
 - Ejecutar `manage.py runserver` solo enlazado a `127.0.0.1`; no exponer el servidor de desarrollo a la red.
