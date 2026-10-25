@@ -4,7 +4,7 @@
 
 Este repositorio reconstruirá el sitio corporativo público `gbitcorp.com`, cuyo CMS actual es ProcessWire, como un proyecto Django + Wagtail con PostgreSQL. Prioridades: conservar identidad, contenidos públicos y URLs verificables; ofrecer edición en Wagtail; mejorar responsive, accesibilidad, seguridad y mantenibilidad.
 
-El trabajo se ejecuta por fases. La Fase 0 (auditoría), FASE 1.1 (base técnica), FASE 1.2B (modelos) y FASE 1.2C (validación editorial/administrativa) están cerradas. Los modelos editoriales permanecen vacíos; no crear/importar páginas, categorías, assets ni contenido ProcessWire, y no construir frontend público hasta autorización de las fases correspondientes.
+El trabajo se ejecuta por fases. Las fases 0 (auditoría), 1.1 (base técnica), 1.2B (modelos), 1.2C (validación editorial/administrativa), 2.2A (contratos visuales/editoriales) y 2.2B (Tailwind y layout global) están cerradas. Los modelos editoriales permanecen vacíos; no crear/importar páginas, categorías ni contenido ProcessWire. Las páginas completas y la importación requieren aprobación de sus fases posteriores.
 
 ## Alcance y fuentes
 
@@ -93,6 +93,11 @@ El trabajo se ejecuta por fases. La Fase 0 (auditoría), FASE 1.1 (base técnica
 - No crear/importar las 49 páginas ni sus dependencias, categorías o medios hasta autorización explícita. Todas siguen `import_authorized=No`; modelos vacíos no constituyen aprobación editorial.
 - No renderizar HTML heredado de ProcessWire como seguro. `BlogPostPage.body` admite RichText acotado e imágenes mediante `ArticleImageBlock` tipado; contenido fuente no representable requiere staging inerte, allowlist/sanitización y revisión. Las tablas históricas no se convierten automáticamente; EULA permanece vacío hasta aprobación legal/editorial.
 - Formularios Zoho son integración funcional fuera de los modelos editoriales; no copiar configuraciones heredadas, credenciales ni enviar solicitudes.
+
+## Frontend global
+
+- El frontend usa Django Templates y Tailwind CSS v4 mediante `@tailwindcss/cli`; no usar CDN, framework SPA ni Bootstrap. Usar Volta con Node.js 22.13.0; npm 10.9.2 fue verificado como funcional en el diagnóstico previo. Ejecutar npm preferentemente mediante `volta run --node 22.13.0 npm ...`: `volta run --node 22.13.0 npm --version`, `volta run --node 22.13.0 npm ci`, `volta run --node 22.13.0 npm run build` y `volta run --node 22.13.0 npm run dev`. En PowerShell, npm puede resolverse como `npm.ps1` y fallar al localizar `npm-prefix.js`; no interpretar ese síntoma como instalación dañada ni reinstalar Node, npm o Volta. No cambiar la configuración global de PowerShell ni sus políticas de ejecución para corregirlo. Los scripts deben existir en `package.json`. Dependencias exactas en `package.json`/`package-lock.json`; `node_modules/` y `static/css/site.css` son generados e ignorados. El build debe ocurrir antes de `collectstatic`/despliegue; Node no se necesita durante las peticiones HTTP.
+- Tailwind parte de `static/src/css/site.css`; las fuentes se limitan a `templates/` y `static/js/`. Mantener clases completas/estáticas y no escanear `docs/`, ProcessWire, `docs/reference/` ni valores editoriales arbitrarios.
 
 ## Validación y documentación
 

@@ -1,0 +1,47 @@
+@import "tailwindcss" source(none);
+
+/* Scan only shipped templates and the small first-party JS directory. */
+@source "../../../templates";
+@source "../../js";
+
+@theme {
+  --color-brand-blue: #105180;
+  --color-brand-deep: #003756;
+  --color-brand-action: #3e74ad;
+  --color-brand-action-hover: #265e9b;
+  --color-brand-muted: #8ba7cb;
+  --color-brand-muted-alt: #a6b3ce;
+  --color-brand-mist: #c4dbf2;
+  --color-brand-sky: #a6c7e0;
+  --font-sans: "Noto Sans", Arial, sans-serif;
+  --breakpoint-md: 48rem;
+  --breakpoint-lg: 64.0625rem;
+  --breakpoint-xl: 85.4375rem;
+  --shadow-nav: 0 2px 4px rgb(0 0 0 / 10%);
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    font-family: "Noto Sans", Arial, sans-serif;
+  }
+
+  :focus-visible {
+    outline: 3px solid #3e74ad;
+    outline-offset: 3px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

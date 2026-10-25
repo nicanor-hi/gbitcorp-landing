@@ -1,0 +1,41 @@
+{% load wagtailimages_tags %}
+<footer class="bg-brand-deep text-white">
+  <div class="container mx-auto grid gap-10 px-4 py-12 md:grid-cols-3">
+    <section aria-labelledby="footer-contact-heading">
+      <h2 id="footer-contact-heading" class="mb-4 text-lg font-bold">Contáctenos</h2>
+      {% if site_footer %}
+        {% if site_footer.address %}<p class="mb-3 whitespace-pre-line">{{ site_footer.address }}</p>{% endif %}
+        {% if site_footer.phone1 %}<p class="mb-2"><a class="underline-offset-4 hover:underline" href="tel:{{ site_footer.phone1 }}">{{ site_footer.phone1 }}</a></p>{% endif %}
+        {% if site_footer.phone2 %}<p class="mb-2"><a class="underline-offset-4 hover:underline" href="tel:{{ site_footer.phone2 }}">{{ site_footer.phone2 }}</a></p>{% endif %}
+        {% if site_footer.email_info %}<p><a class="underline-offset-4 hover:underline" href="mailto:{{ site_footer.email_info }}">{{ site_footer.email_info }}</a></p>{% endif %}
+      {% endif %}
+    </section>
+
+    <nav aria-labelledby="footer-navigation-heading">
+      <h2 id="footer-navigation-heading" class="mb-4 text-lg font-bold">Estamos para servirte</h2>
+      <ul class="grid grid-cols-2 gap-x-5 gap-y-2">
+        {% for label, href in footer_links %}
+          <li><a class="inline-block min-h-11 py-2 underline-offset-4 hover:underline focus-visible:outline-white" href="{{ href }}">{{ label }}</a></li>
+        {% endfor %}
+      </ul>
+    </nav>
+
+    <section aria-labelledby="footer-social-heading">
+      <h2 id="footer-social-heading" class="mb-4 text-lg font-bold">Redes Sociales</h2>
+      {% if site_footer.social_links %}
+        <ul class="flex flex-wrap gap-3">
+          {% for item in site_footer.social_links %}
+            {% with social=item.value %}
+              <li>
+                <a class="inline-flex min-h-11 min-w-11 items-center justify-center rounded-sm focus-visible:outline-white" href="{{ social.url }}" aria-label="{{ social.title }}">
+                  {% image social.image.image fill-40x40 as icon %}
+                  <img src="{{ icon.url }}" alt="{{ social.image.alt_text }}" width="{{ icon.width }}" height="{{ icon.height }}" class="h-10 w-10 object-contain">
+                </a>
+              </li>
+            {% endwith %}
+          {% endfor %}
+        </ul>
+      {% endif %}
+    </section>
+  </div>
+</footer>

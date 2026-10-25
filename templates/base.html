@@ -1,0 +1,22 @@
+{% load static %}
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light">
+    <title>{% block title %}{% if page %}{{ page.seo_title|default:page.title }}{% else %}Global Business IT{% endif %}{% endblock %}</title>
+    {% if page and page.search_description %}<meta name="description" content="{{ page.search_description }}">{% endif %}
+    <link rel="stylesheet" href="{% static 'css/site.css' %}">
+    {% block extra_head %}{% endblock %}
+  </head>
+  <body class="min-h-screen bg-white font-sans text-neutral-700 antialiased">
+    <a class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:bg-white focus:px-4 focus:py-3 focus:text-brand-deep" href="#main-content">Saltar al contenido</a>
+    {% include "includes/header.html" %}
+    <main id="main-content" class="min-h-[50vh]" tabindex="-1">
+      {% block content %}{% endblock %}
+    </main>
+    {% include "includes/footer.html" %}
+    <script type="module" src="{% static 'js/site-navigation.js' %}"></script>
+  </body>
+</html>
