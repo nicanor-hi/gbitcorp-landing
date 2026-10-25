@@ -1,0 +1,41 @@
+# Referencias originales locales, excluidas expresamente del repositorio.
+/docs/gbitcorp.com/
+/docs/reference/
+/docs/PLAYWRIGHT_GBITCORP_WAGTAIL.md
+
+# Entorno Python de este proyecto.
+/.venv/
+
+# Respaldos, configuraciones y credenciales locales.
+*.sql
+*.sql.gz
+*.dump
+*.dump.gz
+*.bak
+*.backup
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+*.cnf
+*.token
+*.jwt
+**/.env
+**/.env.*
+**/credentials/
+**/secrets/
+**/*credential*
+**/*secret*
+**/*password*
+
+# Archivos temporales y artefactos locales.
+*.tmp
+*.temp
+*.log
+/tmp/
+/temp/
+/.idea/
+
+# Resultados temporales de auditoría si se guardan dentro del workspace.
+/.audit-tmp/
