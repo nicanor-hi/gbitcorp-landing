@@ -5,6 +5,20 @@
 
 # Entorno Python de este proyecto.
 /.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Entorno y artefactos locales de Django.
+/.env
+/.env.*
+/media/
+/staticfiles/
+*.sqlite3
+*.sqlite3-journal
 
 # Respaldos, configuraciones y credenciales locales.
 *.sql
@@ -28,6 +42,9 @@
 **/*credential*
 **/*secret*
 **/*password*
+
+# La plantilla de entorno sí se versiona; solo se ignoran los .env locales.
+!/.env.example
 
 # Archivos temporales y artefactos locales.
 *.tmp

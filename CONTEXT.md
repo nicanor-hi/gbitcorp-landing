@@ -6,7 +6,7 @@ Migrar el sitio corporativo público `https://gbitcorp.com` de ProcessWire a Dja
 
 ## Estado de fase
 
-Fases 0, 0.1 y revisión específica del Home (auditoría, preparación y preservación pública) completadas. No se ha creado código Django/Wagtail ni instalado ninguna dependencia del producto. La siguiente fase requiere aprobación del usuario.
+Fases 0 a 0.6.1 (auditoría y preservación) completadas y publicadas en `102a0bf`. FASE 1.1 completada: estructura Django/Wagtail, dependencias bloqueadas, configuración por `.env`, base PostgreSQL de desarrollo y migraciones estándar verificadas. No hay modelos editoriales, importador ni frontend público. FASE 1.2 requiere autorización explícita.
 
 ## Hechos observados
 
@@ -32,10 +32,19 @@ Fases 0, 0.1 y revisión específica del Home (auditoría, preparación y preser
 
 - Windows y PowerShell.
 - Python del proyecto gestionado por uv: **CPython 3.13.17**, fijado en `.python-version`. Intérprete administrado: `%APPDATA%\uv\python\cpython-3.13.17-windows-x86_64-none\python.exe`. `uv` **0.13.5** está instalado en `%USERPROFILE%\.local\bin` mediante el instalador oficial de Astral.
-- `.venv/` fue recreado con `uv venv --clear --python 3.13.17 --managed-python .venv`; `pyvenv.cfg` apunta a la distribución uv, `sys.prefix != sys.base_prefix` y no hay paquetes de aplicación instalados. `.venv/` sigue excluido de Git.
+- `.venv/` fue creado con Python uv gestionado 3.13.17; `pyvenv.cfg` apunta a esa distribución y `sys.prefix != sys.base_prefix`. Ahora contiene las dependencias Django/Wagtail definidas en `uv.lock`; `.venv/` sigue excluido de Git.
 - Python global de Windows permanece intacto e independiente: `C:\Users\nican\AppData\Local\Programs\Python\Python310\python.exe`, versión 3.10.5. El comando global `python` sigue resolviendo a esa instalación; no se añadió Python 3.13 al PATH ni se cambió el ejecutable global.
 - Playwright global 1.61.1 por Volta con Chromium 1228. El documento local fue leído íntegramente y sus instrucciones respetadas.
-- Aún deben seleccionarse versiones compatibles de Django/Wagtail antes de instalar dependencias. No se instaló Django ni Wagtail en este ajuste.
+- Versiones bloqueadas en `uv.lock`: Django **5.2.18**, Wagtail **7.4.4**, psycopg **3.3.6** con extra binary y python-dotenv; todas estables en el momento de la selección. Django 5.2 y Wagtail 7.4 son ramas LTS compatibles con Python 3.13 y PostgreSQL 16. No instalar paquetes globalmente.
+
+## FASE 1.1 — Inicialización Django/Wagtail
+
+- Estructura base: `manage.py`, `config/` (settings, URLs, WSGI, ASGI), `templates/` y `static/`. No se crearon apps editoriales ni modelos propios. Las URLs iniciales exponen `/admin/`, `/django-admin/`, `/documents/` y el enrutador Wagtail en `/`; no hay homepage pública todavía.
+- Settings de desarrollo toman `SECRET_KEY`, `DEBUG`, `ALLOWED_HOSTS`, `DATABASE_URL`, `TIME_ZONE` y `WAGTAILADMIN_BASE_URL` del entorno o `.env` local. `DATABASE_URL` es la única configuración admitida para PostgreSQL; si falta o es inválida, Django falla explícitamente. `.env.example` contiene solo placeholders; `.env`, media, staticfiles, cache y SQLite están ignorados.
+- PostgreSQL 16.1 se ejecuta como servicio Windows `pgsql_16.1-1`, automático y administrado por el usuario, en localhost:5432. Durante FASE 1.1 solo se consultó su estado; no se controló ni modificó el servicio/configuración. `bin/psql.exe` en la instalación referida tiene tamaño 0 bytes; no se reemplazó. Las comprobaciones/operaciones de esta fase utilizaron psycopg desde el entorno del proyecto.
+- El archivo `.env` local (ignorado) contiene `SECRET_KEY` aleatoria y `DATABASE_URL`; el marcador de nombre aleatorio fue sustituido localmente por `gbitcorp_wagtail_dev`. No se documenta la URL ni credenciales. La base inexistente se creó en UTF-8 con el usuario ya proporcionado como propietario; no se crearon roles ni se alteraron privilegios. Hay 51 tablas no-sistema y 219 migraciones estándar aplicadas.
+- `manage.py check`, `migrate --check`, `uv sync --locked` y dos pruebas sin DB pasaron. `/admin/login/` y el CSS estático Wagtail devolvieron HTTP 200 desde el servidor de desarrollo enlazado a `127.0.0.1`; no se creó superusuario. El proceso de desarrollo se cerró tras las pruebas.
+- Windows es el entorno nativo de desarrollo. No se utilizó Docker; la contenerización se reserva para fases posteriores en Arch Linux y producción. No se usó MySQL histórico ni RDS. La base ProcessWire permanece fuera de esta fase.
 
 ## Arquitectura objetivo (propuesta, no implementada)
 
@@ -55,4 +64,5 @@ Fases 0, 0.1 y revisión específica del Home (auditoría, preparación y preser
 - Las mejoras responsive pueden reemplazar divisores de imagen por CSS/SVG responsive, preservando intención visual.
 - Ver la auditoría inicial en `docs/01_AUDITORIA_PROCESSWIRE.md` a `docs/06_PLAN_MIGRACION.md`, preservación en `docs/07_PRESERVACION_SITIO.md` a `docs/14_DIAGNOSTICO_HOME_RENDIMIENTO.md`, y auditoría/modelo/mapeo DB en `docs/15_AUDITORIA_MYSQL_PROCESSWIRE.md` a `docs/19_ESTRATEGIA_IMPORTACION.md`.
 - FASE 0.5–0.6.1 documenta codificación, manifiesto de 49 rutas, clasificación editorial, assets, preparación del importador y cierre en `docs/20_` a `docs/25_`; el CSV `docs/21_MANIFIESTO_CONTENIDO_VIGENTE.csv` sigue siendo una allowlist candidata, no aprobación de publicación.
+- La implementación Django/Wagtail de FASE 1.1 se limita a configuración técnica base y migraciones estándar. El usuario administra el servicio PostgreSQL; Codex no lo controla. La base autorizada para desarrollo es `gbitcorp_wagtail_dev`; no se creó usuario ni se cambiaron privilegios. No se crea superusuario sin autorización expresa.
 - El respaldo ProcessWire y el documento fuente Playwright permanecen locales e ignorados. Las referencias de assets apuntan a las rutas del respaldo; no se copiaron assets binarios a `docs/reference/`, por lo que estas referencias no son autosuficientes si se pierde el respaldo local. No se modificó el original.

@@ -4,7 +4,7 @@
 
 Este repositorio reconstruirá el sitio corporativo público `gbitcorp.com`, cuyo CMS actual es ProcessWire, como un proyecto Django + Wagtail con PostgreSQL. Prioridades: conservar identidad, contenidos públicos y URLs verificables; ofrecer edición en Wagtail; mejorar responsive, accesibilidad, seguridad y mantenibilidad.
 
-El trabajo se ejecuta por fases. La Fase 0 es auditoría y preparación. No crear Django/Wagtail, modelos, migraciones ni lógica de aplicación hasta recibir aprobación expresa de la fase siguiente.
+El trabajo se ejecuta por fases. La Fase 0 (auditoría) está cerrada y FASE 1.1 (esqueleto Django/Wagtail) está autorizada. No crear todavía modelos editoriales, importadores, contenido migrado ni frontend público; esperar autorización para FASE 1.2.
 
 ## Alcance y fuentes
 
@@ -70,8 +70,12 @@ El trabajo se ejecuta por fases. La Fase 0 es auditoría y preparación. No crea
 
 - `.venv/` está excluido de Git. Antes de recrearlo, inspeccionar `pyvenv.cfg` y paquetes (`uv pip list --python .venv\Scripts\python.exe`) y preservar cualquier dependencia/dato ajeno al entorno. `uv venv --clear` solo se permite para la ruta exacta del `.venv` de este repositorio tras verificarla.
 - Para evitar problemas con la política de activación de PowerShell, usar `.\.venv\Scripts\python.exe` directamente y verificar ruta/versión con `.\.venv\Scripts\python.exe --version` y `.\.venv\Scripts\python.exe -c "import sys; print(sys.executable); print(sys.prefix != sys.base_prefix)"`.
-- No instalar Django, Wagtail u otras dependencias hasta aprobar versiones y una fase de implementación.
-- Verificar compatibilidad de Python 3.13 con las versiones de Django/Wagtail seleccionadas antes de instalar dependencias.
+- Las dependencias de aplicación se declaran en `pyproject.toml` y se resuelven en `uv.lock`; usar `uv sync` y `uv run`, nunca instalaciones globales. La base técnica actual usa Django 5.2 LTS, Wagtail 7.4 LTS, psycopg 3 y Python 3.13.17; revisar compatibilidad oficial antes de actualizar.
+- Configuración local solo por variables de entorno o `.env` ignorado; `.env.example` no lleva secretos. `DATABASE_URL` es la única fuente de configuración de PostgreSQL; si falta o es inválida, Django debe fallar explícitamente. No usar variables individuales `DB_*`. No incluir credenciales en código, argumentos, documentación ni Git.
+- PostgreSQL es un servicio administrado por el usuario. Codex no debe iniciarlo, detenerlo, reiniciarlo, deshabilitarlo, reinstalarlo ni modificar servicio, configuración o datos del servidor. Solo conectar a la instancia local indicada por `.env`. Si la base de `DATABASE_URL` no existe, se permite crear únicamente esa base con el usuario existente, autocommit e identificador escapado con psycopg; no crear roles ni cambiar privilegios. Si ya existe, inspeccionar objetos antes de migrar y detenerse si hay tablas/datos previos no atribuibles al proyecto. Aplicar migraciones solo a la base confirmada.
+- El desarrollo actual es nativo en Windows; la contenerización se planifica posteriormente para Arch Linux y producción.
+- Ejecutar `manage.py runserver` solo enlazado a `127.0.0.1`; no exponer el servidor de desarrollo a la red.
+- En FASE 1.1 solo están autorizados los modelos base y migraciones estándar de Django/Wagtail sobre la base de desarrollo aprobada. No importar ProcessWire ni crear modelos editoriales hasta FASE 1.2 autorizada.
 
 ## Validación y documentación
 
