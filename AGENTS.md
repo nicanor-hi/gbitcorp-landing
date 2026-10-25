@@ -91,7 +91,7 @@ El trabajo se ejecuta por fases. La Fase 0 (auditoría), FASE 1.1 (base técnica
 - La base PostgreSQL de desarrollo contiene el esquema editorial de FASE 1.2B; solo aplicar migraciones autorizadas a `gbitcorp_wagtail_dev`. No administrar el servicio PostgreSQL ni cambiar usuarios/privilegios. No ejecutar migraciones hacia otras bases.
 - `RouteContainerPage` son ancestros técnicos, no contenido: deben permanecer fuera de menús, búsqueda y sitemap, devolver 404 directamente y solo existir para resolver rutas hijas verificadas. No crear sus instancias automáticamente sin autorización de la fase de carga de estructura/contenido.
 - No crear/importar las 49 páginas ni sus dependencias, categorías o medios hasta autorización explícita. Todas siguen `import_authorized=No`; modelos vacíos no constituyen aprobación editorial.
-- No renderizar HTML heredado de ProcessWire como seguro. Artículos usan StreamField tipado con RichText acotado; contenido fuente no representable requiere staging inerte, allowlist/sanitización y revisión. EULA permanece vacío hasta aprobación legal/editorial.
+- No renderizar HTML heredado de ProcessWire como seguro. `BlogPostPage.body` admite RichText acotado e imágenes mediante `ArticleImageBlock` tipado; contenido fuente no representable requiere staging inerte, allowlist/sanitización y revisión. Las tablas históricas no se convierten automáticamente; EULA permanece vacío hasta aprobación legal/editorial.
 - Formularios Zoho son integración funcional fuera de los modelos editoriales; no copiar configuraciones heredadas, credenciales ni enviar solicitudes.
 
 ## Validación y documentación

@@ -123,7 +123,7 @@ Paginación: el template puede usar paginación Django si la fase de implementac
 | Hero | Home, blog index/artículo, servicios | texto/título; imagen de fondo o portada | CTA/enlaces según evidencia | texto real seleccionable, contraste sobre imagen, alto adaptable | include/bloque visual; fondo con focal point y fallback, no texto incrustado en imagen. |
 | Botones/CTA | Home, servicios, blog, back-link EULA | etiqueta y destino | navegación | tamaño táctil, foco/hover, link semántico | include/clase de componente con estilo consistente por variante observada. |
 | Enlaces a servicios | Home | título y `PageChooser` de ServicePage | navegación | tarjetas/links semánticos, orden | bloque existente `service_links`. |
-| Carrusel/tarjetas de servicio | Home | bloque actual solo conserva grupos/imágenes; título/destino no modelados aquí | anterior/siguiente si se confirma | no permitir overflow de clones; controles etiquetados, teclado, sin autoplay o con pausa | componente discreto; **mismatch de datos pendiente** (ver §7). |
+| Carrusel de imágenes de servicios | Home | bloque actual conserva grupos/imágenes; el template original solo imprime imágenes con alt genérico, sin título ni enlace | Owl: navegación y autoplay dependen del viewport | evitar clones/overflow; controles etiquetados y pausa accesible | componente discreto; el modelo de imágenes coincide con el uso real. Véase conciliación en §7 y documento 32. |
 | Sección de socios/productos | Home | headings/imagen CTA definidos en PartnerSection | CTA opcional | apilar y mantener proporciones | template del bloque aprobado; recurso optimizado. |
 | Sobre nosotros/equipo | Home | RichText, grupos de imágenes, careers link | CTA carreras | grupos reorganizados, alt contextual | bloque Home; imágenes responsive vía Wagtail. |
 | Bloque de texto | Home | heading y RichText | enlaces del texto | anchura legible, headings jerárquicos | template asociado a `TextSectionBlock`. |
@@ -144,7 +144,7 @@ No hay evidencia para añadir nuevos componentes de testimonios, pricing, newsle
 |---|---|---|
 | `HomePage` | `editorial/home_page.html` | Hero y secciones ordenadas; conservar secuencia editorial. Campo de imagen/CTA de hero no está en el modelo actual. |
 | `ServiceLinksSectionBlock` | bloque home “enlaces de servicio” | Título/links a ServicePage; no confundir con carrusel de servicios. |
-| `ServiceCarouselSectionBlock` + `ImageGroupBlock` | bloque home de tarjetas/carrusel | Solo grupos de imágenes. El código/preservación muestra tarjetas con nombre/enlace: falta confirmar cómo se recuperan esos datos. No inferir texto desde nombre de archivo ni cambiar modelo aquí. |
+| `ServiceCarouselSectionBlock` + `ImageGroupBlock` | bloque home de carrusel de imágenes | Corresponde al `foreach` original: grupos ordenados con imágenes ordenadas, sin títulos ni enlaces. La brecha descrita en la versión inicial de este informe fue una inferencia incorrecta; se corrige con evidencia de `home.php` en `docs/32_RESOLUCION_CONTRATOS_VISUALES.md`. No requiere ampliar el modelo por ese motivo. |
 | `PartnerSectionBlock` | bloque home de socios/productos | Heading, imágenes y CTA disponibles. |
 | `AboutSectionBlock` | bloque home “sobre nosotros” | RichText, grupos de imágenes y careers link. |
 | `TextSectionBlock` | bloque de texto genérico acotado | Heading + RichText. |
@@ -162,7 +162,7 @@ Las cinco familias editoriales están cubiertas: Home, índice/artículo de blog
 ## 7. Hallazgos de compatibilidad modelo/diseño
 
 1. **Hero Home:** el modelo actual incluye `hero_copy`, pero no expresa una relación visible con el gran fondo urbano ni CTA principal. El CSS legado coloca imagen y acciones visuales. Determinar en FASE 2.2 si el fondo es recurso estático versionado, imagen administrada, o si hay que proponer cambio contractual; requiere validar si el CTA está respaldado por datos ya modelados. No inventar.
-2. **Carrusel Home:** `ServiceCarouselSectionBlock` aporta imágenes, pero la composición pública muestra tarjetas con títulos/enlaces. Hay una brecha de datos confirmada entre el bloque implementado y la referencia; identificar fuente real/decisión antes del template final.
+2. **Carruseles Home:** el servicio carousel es imagen-only y su bloque coincide con el template; el carrusel de equipo también usa grupos ordenados de imágenes, con indicadores/controles de Bootstrap. La afirmación previa de títulos/enlaces en el carrusel de servicios era incorrecta; para detalle de intervalos, orden y cobertura véase `docs/32_RESOLUCION_CONTRATOS_VISUALES.md`.
 3. **Cuerpo de artículos:** StreamField actual permite RichText acotado. La auditoría responsive registra tablas anchas y elementos de imagen/flotantes en artículos públicos. No renderizar HTML ProcessWire bruto. Antes de importación, decidir bloques tipados suficientes (p. ej. imagen, tabla tratada, texto) o conversión intermedia con validación, en proceso contractual aparte.
 4. **Contacto:** el bloque modela encabezado, no campos. El formulario público se conectaba a un tercero y no se envió. La representación estética no implica autorización ni datos suficientes para integrar Zoho.
 5. **Blog:** evitar pagination nueva hasta aprobación; markup de paginación original estaba comentado. Mantener filtros sin publicar rutas de categoría.
@@ -274,7 +274,7 @@ Las capturas de baseline locales son útiles pero no portables; si se requiere C
 | Tokens spacing/container/contraste | Propuesta parcial | medir y verificar con captura y herramienta de contraste en 2.2. |
 | Comparación visual en CI | Limitación de referencias | definir custodia de baseline o mantener validación local reproducible. |
 
-No hay bloqueo para comenzar el andamiaje de templates/CSS de componentes confirmados, pero **hero, carrusel y cuerpo de artículo requieren decisión antes de cerrar esas vistas o importar contenido**. Cambios de modelo están fuera de alcance de este informe y requieren autorización.
+No hay brecha de esquema confirmada para los carruseles. **La administración del fondo del hero y los bloques de imágenes/tablas del artículo requieren decisión contractual antes de cerrar esas vistas o importar contenido**. Véase la conciliación y las aprobaciones pendientes en `docs/32_RESOLUCION_CONTRATOS_VISUALES.md`.
 
 ## 14. Plan de implementación FASE 2.2
 

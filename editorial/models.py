@@ -16,6 +16,7 @@ from wagtail.snippets.models import register_snippet
 
 from .blocks import (
     AboutSectionBlock,
+    ArticleImageBlock,
     ContactSectionBlock,
     PartnerSectionBlock,
     RICH_TEXT_FEATURES,
@@ -153,6 +154,13 @@ class HomePage(Page):
     subpage_types = ["editorial.RouteContainerPage"]
     max_count = 1
     hero_copy = models.TextField(blank=True)
+    hero_image = models.ForeignKey(
+        get_image_model_string(),
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="+",
+    )
     sections = StreamField(
         [
             ("service_links", ServiceLinksSectionBlock()),
@@ -168,6 +176,7 @@ class HomePage(Page):
 
     content_panels = Page.content_panels + [
         FieldPanel("hero_copy"),
+        FieldPanel("hero_image"),
         FieldPanel("sections"),
     ]
 
@@ -202,7 +211,10 @@ class BlogPostPage(Page):
     subpage_types = []
     summary = models.TextField(blank=True)
     body = StreamField(
-        [("rich_text", blocks.RichTextBlock(features=RICH_TEXT_FEATURES))],
+        [
+            ("rich_text", blocks.RichTextBlock(features=RICH_TEXT_FEATURES)),
+            ("image", ArticleImageBlock()),
+        ],
         blank=True,
         use_json_field=True,
     )

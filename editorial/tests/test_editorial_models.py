@@ -29,6 +29,11 @@ from editorial.models import (
 class EditorialModelTests(TestCase):
     def test_models_are_registered_without_seeded_content(self):
         self.assertEqual(HomePage.objects.count(), 0)
+        self.assertEqual(BlogIndexPage.objects.count(), 0)
+        self.assertEqual(BlogPostPage.objects.count(), 0)
+        self.assertEqual(ServicePage.objects.count(), 0)
+        self.assertEqual(EulaPage.objects.count(), 0)
+        self.assertEqual(RouteContainerPage.objects.count(), 0)
         self.assertEqual(BlogCategory.objects.count(), 0)
         self.assertEqual(
             {model.__name__ for model in (HomePage, BlogIndexPage, BlogPostPage, ServicePage, EulaPage)},
@@ -141,6 +146,7 @@ class EditorialModelTests(TestCase):
         home = root.add_child(
             instance=HomePage(title="Image fixture", slug="test-home", live=True)
         )
+        self.assertIsNone(home.hero_image_id)
         blog = home.add_child(
             instance=RouteContainerPage(title="Blog route", slug="blog", live=True)
         )
@@ -159,18 +165,108 @@ class EditorialModelTests(TestCase):
                 file=ContentFile(buffer.getvalue(), name="temporary-test-image.png"),
             )
             image.save()
+            home.hero_image = image
+            home.save()
+            home.refresh_from_db()
+            self.assertEqual(home.hero_image_id, image.pk)
+
             article.lead_image = image
             article.save()
 
-            stream_field = ServicePage._meta.get_field("tools")
-            image_block = stream_field.stream_block.child_blocks["tool"]
+            article_field = BlogPostPage._meta.get_field("body")
+            image_block = article_field.stream_block.child_blocks["image"]
+            valid_image_value = image_block.to_python(
+                {
+                    "image": image.pk,
+                    "decorative": False,
+                    "alt_text": "Diagrama explicativo",
+                    "caption": "Leyenda opcional",
+                    "alignment": "left",
+                }
+            )
+            image_block.clean(valid_image_value)
+
             with self.assertRaises(ValidationError):
                 image_block.clean(
                     image_block.to_python(
+                        {
+                            "image": None,
+                            "decorative": True,
+                            "alt_text": "",
+                            "caption": "",
+                            "alignment": "",
+                        }
+                    )
+                )
+            with self.assertRaises(ValidationError):
+                image_block.clean(
+                    image_block.to_python(
+                        {
+                            "image": image.pk,
+                            "decorative": False,
+                            "alt_text": "   ",
+                            "caption": "",
+                            "alignment": "",
+                        }
+                    )
+                )
+            with self.assertRaises(ValidationError):
+                image_block.clean(
+                    image_block.to_python(
+                        {
+                            "image": image.pk,
+                            "decorative": True,
+                            "alt_text": "",
+                            "caption": "",
+                            "alignment": "center",
+                        }
+                    )
+                )
+
+            decorative_image = image_block.to_python(
+                {
+                    "image": image.pk,
+                    "decorative": True,
+                    "alt_text": "",
+                    "caption": "",
+                    "alignment": "right",
+                }
+            )
+            image_block.clean(decorative_image)
+
+            stream_value = article_field.to_python(
+                [
+                    {
+                        "type": "image",
+                        "value": {
+                            "image": image.pk,
+                            "decorative": False,
+                            "alt_text": "Diagrama explicativo",
+                            "caption": "Leyenda opcional",
+                            "alignment": "left",
+                        },
+                    }
+                ]
+            )
+            self.assertEqual(stream_value[0].value["image"].pk, image.pk)
+            prepared = article_field.get_prep_value(stream_value)
+            self.assertEqual(prepared[0]["value"]["image"], image.pk)
+            restored = article_field.to_python(prepared)
+            self.assertEqual(restored[0].block_type, "image")
+            self.assertEqual(restored[0].value["image"].pk, image.pk)
+            self.assertEqual(restored[0].value["alt_text"], "Diagrama explicativo")
+            self.assertEqual(restored[0].value["caption"], "Leyenda opcional")
+            self.assertEqual(restored[0].value["alignment"], "left")
+
+            service_field = ServicePage._meta.get_field("tools")
+            service_block = service_field.stream_block.child_blocks["tool"]
+            with self.assertRaises(ValidationError):
+                service_block.clean(
+                    service_block.to_python(
                         {"image": image.pk, "decorative": False, "alt_text": ""}
                     )
                 )
-            stream_value = stream_field.to_python(
+            service_value = service_field.to_python(
                 [
                     {
                         "type": "tool",
@@ -182,10 +278,10 @@ class EditorialModelTests(TestCase):
                     }
                 ]
             )
-            self.assertEqual(stream_value[0].value.pk, image.pk)
-            restored = stream_field.to_python(stream_field.get_prep_value(stream_value))
-            self.assertEqual(restored[0].block_type, "tool")
-            self.assertEqual(restored[0].value.pk, image.pk)
+            self.assertEqual(service_value[0].value.pk, image.pk)
+            service_restored = service_field.to_python(service_field.get_prep_value(service_value))
+            self.assertEqual(service_restored[0].block_type, "tool")
+            self.assertEqual(service_restored[0].value.pk, image.pk)
 
             image.delete()
             article.refresh_from_db()
@@ -222,6 +318,7 @@ class EditorialModelTests(TestCase):
             args=("editorial", "sitefootersettings", site.pk),
         )
         page_edit_url = reverse("wagtailadmin_pages:edit", args=(article.pk,))
+        home_edit_url = reverse("wagtailadmin_pages:edit", args=(home.pk,))
 
         self.assertEqual(client.get(snippet_list_url).status_code, 302)
         self.assertEqual(client.get(settings_edit_url).status_code, 302)
@@ -239,6 +336,10 @@ class EditorialModelTests(TestCase):
         page_response = client.get(page_edit_url)
         self.assertEqual(page_response.status_code, 200)
         self.assertContains(page_response, "Admin category")
+
+        home_response = client.get(home_edit_url)
+        self.assertEqual(home_response.status_code, 200)
+        self.assertContains(home_response, "hero_image")
 
     def test_exact_manifest_routes_and_structural_404s(self):
         root = Page.get_first_root_node()

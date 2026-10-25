@@ -1,10 +1,51 @@
 """Typed Wagtail blocks backed by the public-site audit."""
 
+from django.core.exceptions import ValidationError
 from wagtail import blocks
-from wagtail.images.blocks import ImageBlock
+from wagtail.blocks.struct_block import StructBlockValidationError
+from wagtail.images.blocks import ImageBlock, ImageChooserBlock
 
 
 RICH_TEXT_FEATURES = ["h2", "h3", "h4", "bold", "italic", "ol", "ul", "link"]
+
+
+class ArticleImageBlock(blocks.StructBlock):
+    """Article image with explicit accessibility and audited alignment options."""
+
+    image = ImageChooserBlock(label="Imagen")
+    decorative = blocks.BooleanBlock(
+        required=False,
+        default=False,
+        label="Imagen decorativa",
+    )
+    alt_text = blocks.CharBlock(required=False, label="Texto alternativo")
+    caption = blocks.TextBlock(required=False, label="Leyenda")
+    alignment = blocks.ChoiceBlock(
+        choices=[("left", "Izquierda"), ("right", "Derecha")],
+        required=False,
+        default="",
+        label="Alineación",
+    )
+
+    def clean(self, value):
+        value = super().clean(value)
+        if (
+            value["image"]
+            and not value["decorative"]
+            and not (value["alt_text"] or "").strip()
+        ):
+            raise StructBlockValidationError(
+                block_errors={
+                    "alt_text": ValidationError(
+                        "Añade un texto alternativo o marca la imagen como decorativa."
+                    )
+                }
+            )
+        return value
+
+    class Meta:
+        icon = "image"
+        label = "Imagen de artículo"
 
 
 class ImageGroupBlock(blocks.StructBlock):

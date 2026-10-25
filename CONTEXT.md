@@ -6,7 +6,7 @@ Migrar el sitio corporativo público `https://gbitcorp.com` de ProcessWire a Dja
 
 ## Estado de fase
 
-Fases 0 a 0.6.1 (auditoría y preservación) completadas y publicadas en `102a0bf`. FASE 1.1 completada: estructura Django/Wagtail, dependencias bloqueadas, configuración por `.env`, base PostgreSQL de desarrollo y migraciones estándar verificadas. FASE 1.2B completada: modelos editoriales vacíos, StreamFields, snippet de categorías y migración de esquema aplicados. FASE 1.2C completada: 16 pruebas pasan, las 49 rutas del manifiesto resuelven en fixtures temporales y la administración fue validada con usuario efímero de test. No se crearon páginas, categorías, assets ni contenido migrado en la base permanente; las 49 rutas siguen con `import_authorized=No`. No hay frontend público. Ver `docs/30_VALIDACION_EDITORIAL_WAGTAIL.md`.
+Fases 0 a 0.6.1 (auditoría y preservación) completadas y publicadas en `102a0bf`. FASE 1.1 completada: estructura Django/Wagtail, dependencias bloqueadas, configuración por `.env`, base PostgreSQL de desarrollo y migraciones estándar verificadas. FASE 1.2B completada: modelos editoriales vacíos, StreamFields, snippet de categorías y migración de esquema aplicados. FASE 1.2C completada: 16 pruebas pasan, las 49 rutas del manifiesto resuelven en fixtures temporales y la administración fue validada con usuario efímero de test. FASE 2.2A.3 completada: `HomePage.hero_image` opcional y bloque tipado de imagen en artículos; migración aplicada y 17 pruebas pasan. No se crearon páginas, categorías, assets ni contenido migrado en la base permanente; las 49 rutas siguen con `import_authorized=No`. No hay frontend público. Ver `docs/30_VALIDACION_EDITORIAL_WAGTAIL.md` y `docs/35_AJUSTES_EDITORIALES_FRONTEND.md`.
 
 ## Hechos observados
 
@@ -63,6 +63,14 @@ Fases 0 a 0.6.1 (auditoría y preservación) completadas y publicadas en `102a0b
 - `manage.py check`, `makemigrations --check --dry-run`, `migrate --check` y `git diff --check` pasan. Settings de producción se importaron con variables ficticias, sin conexión a producción. No se generaron migraciones nuevas.
 - RichText limitado no constituye sanitización del HTML legado. El futuro importador requiere allowlist y revisión; no usar `StreamField.to_python` como validador de bloques desconocidos, pues el comportamiento del framework puede omitir tipos desconocidos.
 - Detalle: `docs/30_VALIDACION_EDITORIAL_WAGTAIL.md`. FASE 1.2C no autoriza importar contenido ni construir frontend.
+
+## FASE 2.2A.3 — Ajustes editoriales previos al frontend
+
+- `HomePage.hero_image` es FK opcional al modelo de imágenes Wagtail con `SET_NULL`; no se asignó una imagen por defecto. La ausencia debe tratarse como estado normal en el futuro template.
+- `BlogPostPage.body` conserva el bloque `rich_text` existente y agrega `image` (`ArticleImageBlock`): chooser nativo Wagtail, texto alternativo obligatorio salvo marcado decorativo, leyenda opcional y alineación vacía/izquierda/derecha. Izquierda/derecha se apoyan en las clases observadas en el HTML público; no se generaron alt ni se importaron medios.
+- `editorial.0002_homepage_hero_image_alter_blogpostpage_body` contiene solo el nuevo campo opcional y un `AlterField` de StreamField sin operación SQL de datos; se aplicó a `gbitcorp_wagtail_dev`.
+- Las doce tablas históricas siguen sin conversión: ocho envolturas de maquetación, dos comparativas PWA pendientes de revisión de encabezados y dos casos Cloud ambiguos. Cualquier conversión debe conservar contenido y detenerse ante datos no representables; ver `docs/34_CLASIFICACION_TABLAS_ARTICULOS.md` y `docs/35_AJUSTES_EDITORIALES_FRONTEND.md`.
+- No se crearon páginas/categorías ni se importaron imágenes. Las 49 rutas siguen siendo el único alcance público, pero importación/publicación continúa sin autorización. No se cambió ningún modelo de carrusel ni se inició frontend.
 
 ## Arquitectura objetivo (propuesta, no implementada)
 
